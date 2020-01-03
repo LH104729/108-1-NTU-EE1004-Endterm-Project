@@ -6,6 +6,7 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include "SDL2/SDL_ttf.h"
+#include "SDL2/SDL2_mixer-2.0.4/i686-w64-mingw32/include/SDL2/SDL_mixer.h"
 #include <string>
 
 
@@ -317,13 +318,8 @@ class GameMechanics{
 
     unsigned int t0, t1;
 
-    void initialize();
     void summon();
-    bool isLegal();
-    void down();
-    void left();
-    void right();
-    void hardDrop();
+    bool isLegal() const;
     void ghost();
     void cRotate();
     void touch();
@@ -331,26 +327,32 @@ class GameMechanics{
     void checkLine();
     void hold();
     virtual bool isGG();
+
+    void operator++();      //Left
+    void operator++(int);   //Right
+    void operator-();       //Down
+    void operator--();      //Hard Drop
 };
 
 class Singleplayer: public GameMechanics{
     public:
-    void restart();
+    Singleplayer();
+    ~Singleplayer();
     bool isGG();
-    friend GameMechanics;
 };
 
 class Multiplayer: public GameMechanics{
     public:
     int rl,kos;
 
-    void restart();
+    Multiplayer();
+    ~Multiplayer();
     bool isGG();
     void ko();
     void recieveLine();
 };
 
-void GameMechanics::initialize(){
+Singleplayer::Singleplayer(){
     for (int i = 0;i<28;i++){
         for (int j = 0;j<10;j++){
             board[i][j] = map_list[selected_map][i][j];
@@ -361,25 +363,37 @@ void GameMechanics::initialize(){
     touched = false;
     gg = false;
     speed = 0;
-    return;
-}
-
-void Singleplayer::restart(){
-    sl = 0;
     srand(time(0));
     nextPiece = (Piece)(rand()%7);
     summon();
     return;
 }
 
-void Multiplayer::restart(){
+Singleplayer::~Singleplayer(){
+
+}
+
+Multiplayer::Multiplayer(){
+    for (int i = 0;i<28;i++){
+        for (int j = 0;j<10;j++){
+            board[i][j] = map_list[selected_map][i][j];
+        }
+    }
     sl = 0;
+    held = false;
+    touched = false;
+    gg = false;
+    speed = 0;
     rl = 0;
     kos = 0;
     srand(time(0));
     nextPiece = (Piece)(rand()%7);
     summon();
     return;
+}
+
+Multiplayer::~Multiplayer(){
+
 }
 
 void GameMechanics::summon(){
@@ -394,9 +408,10 @@ void GameMechanics::summon(){
     if (!isLegal()){ gg = true; return; }
     t0 = SDL_GetTicks();
     ghost();
+    return;
 }
 
-bool GameMechanics::isLegal(){
+bool GameMechanics::isLegal() const{
     for (int i =0;i<4;i++){
         for (int j =0;j<4;j++){
             if (pieces[(int)currentPiece][currentRotation][i][j]!=0){
@@ -412,14 +427,15 @@ bool GameMechanics::isLegal(){
     return true;
 }
 
-void GameMechanics::down(){
+void GameMechanics::operator-(){
     currenty++;
     if (!isLegal()){
         currenty--;
         touch();
     }
+    return;
 }
-void GameMechanics::left(){
+void GameMechanics::operator++(){
     if (currentx>0&&currentx<=9){
         currentx--;
         if (!isLegal()){
@@ -427,8 +443,9 @@ void GameMechanics::left(){
         }
     }
     ghost();
+    return;
 }
-void GameMechanics::right(){
+void GameMechanics::operator++(int){
     if (currentx>=0&&currentx<9){
         currentx++;
         if (!isLegal()){
@@ -436,13 +453,15 @@ void GameMechanics::right(){
         }
     }
     ghost();
+    return;
 }
-void GameMechanics::hardDrop(){
+void GameMechanics::operator--(){
     while (isLegal()){
         currenty++;
     }
     currenty--;
     touch();
+    return;
 }
 void GameMechanics::ghost(){
     int tempy = currenty;
@@ -452,6 +471,7 @@ void GameMechanics::ghost(){
     currenty--;
     ghosty = currenty;
     currenty = tempy;
+    return;
 }
 void GameMechanics::cRotate(){
     currentRotation = (currentRotation+1)%4;
@@ -459,6 +479,7 @@ void GameMechanics::cRotate(){
         currentRotation = (currentRotation+3)%4;
     } else t0 = SDL_GetTicks();
     ghost();
+    return;
 }
 
 void GameMechanics::touch(){
@@ -524,6 +545,7 @@ void GameMechanics::clearLine(int i){
     }
     else speed = (int) sl/10;
     t0 = SDL_GetTicks();
+    return;
 }
 
 void GameMechanics::checkLine(){
@@ -539,6 +561,7 @@ void GameMechanics::checkLine(){
             }
         }
     }
+    return;
 }
 
 void GameMechanics::hold(){
@@ -561,6 +584,7 @@ void GameMechanics::hold(){
         held = true;
     }
     ghost();
+    return;
 }
 
 void Multiplayer::recieveLine(){
@@ -574,6 +598,8 @@ void Multiplayer::recieveLine(){
     }
     board[27][rand()%10] = 9;
     rl++;
+    ghost();
+    return;
 }
 
 SDL_Keycode keyList[] = {SDLK_UP,SDLK_DOWN,SDLK_LEFT,SDLK_RIGHT,SDLK_SPACE,SDLK_LSHIFT,SDLK_RSHIFT,SDLK_RETURN,SDLK_KP_ENTER,SDLK_KP_0,SDLK_a,SDLK_s,SDLK_d,SDLK_w,SDLK_RCTRL};
@@ -615,12 +641,12 @@ int main(int argc, char *argv[])
     SDL_Surface *surface = NULL;
     SDL_Renderer *renderer = NULL;
     SDL_Event event;
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
         return 3;
     }
 
-    // load support for the JPG and PNG image formats
     int flags = IMG_INIT_JPG|IMG_INIT_PNG;
     if( (IMG_Init(flags)&flags) != flags ) {
         std::cout << "IMG_Init: Failed to init required jpg and png support!\n";
@@ -638,6 +664,11 @@ int main(int argc, char *argv[])
         std::cout << "TTF_OpenFont: " << TTF_GetError() << std::endl;
         return 3;
     }
+
+    SDL_Init(SDL_INIT_AUDIO);
+    Mix_OpenAudio(22050,AUDIO_S16SYS,2,640);
+    Mix_Music *bgm = Mix_LoadMUS("./sound/bgm.mp3");
+    Mix_PlayMusic(bgm,-1);
 
     window = SDL_CreateWindow("Tetris", 50, 50, 960, 540, SDL_WINDOW_SHOWN);
     if (!window) {
@@ -709,8 +740,6 @@ int main(int argc, char *argv[])
     SDL_Texture *gg = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
     SDL_Rect gg_rect = {405,250,150,32};
-    Multiplayer g1, g2;
-    Singleplayer g;
 
     status = Menu;
     int menuSelection = 1;
@@ -785,14 +814,13 @@ int main(int argc, char *argv[])
             SDL_RenderPresent(renderer);
         }
         if (status == Single){
-            g.initialize();
-            g.restart();
+            Singleplayer g;
             while (!g.isGG()){
                 //Game mechanics
                 g.t1 = SDL_GetTicks();
                 if (g.t1-g.t0>speedTable[g.speed]){
                     g.t0 = g.t1;
-                    g.down();
+                    -g;
                 }
                 SDL_PollEvent(&event);
                 if (event.type == SDL_QUIT) {
@@ -800,10 +828,10 @@ int main(int argc, char *argv[])
                 }
                 keypress(event.key.keysym.sym, event.type);
                 if (key == SDLK_LEFT || key == SDLK_a){
-                    g.left();
+                    ++g;
                 }
                 if (key == SDLK_RIGHT || key == SDLK_d){
-                    g.right();
+                    g++;
                 }
                 if (key == SDLK_UP || key == SDLK_w){
                     g.cRotate();
@@ -811,11 +839,11 @@ int main(int argc, char *argv[])
                 if (key == SDLK_DOWN ||key == SDLK_s){
                     if (g.t1-g.t0>speedTable[g.speed]/2){
                         g.t0 = g.t1;
-                        g.down();
+                        -g;
                     }
                 }
                 if (key == SDLK_SPACE){
-                    g.hardDrop();
+                    --g;
                 }
                 if (key == SDLK_RSHIFT||key == SDLK_LSHIFT){
                     g.hold();
@@ -903,6 +931,7 @@ int main(int argc, char *argv[])
                 SDL_RenderPresent(renderer);
 
             }
+            g.~Singleplayer();
             status = End1P;
 
         }
@@ -918,26 +947,22 @@ int main(int argc, char *argv[])
             }
         }
         if (status == Multi){
-            g1.initialize();
-            g1.restart();
-            g2.initialize();
-            g2.restart();
+            Multiplayer g1, g2;
             TIME_BEGIN = SDL_GetTicks();
             TIME_NOW = SDL_GetTicks();
             while (TIME_NOW-TIME_BEGIN<120000){
                 //Game mechanics
-
                 g1.isGG();
                 g2.isGG();
                 g1.t1 = SDL_GetTicks();
                 g2.t1 = SDL_GetTicks();
                 if (g1.t1-g1.t0>700){
                     g1.t0 = g1.t1;
-                    g1.down();
+                    -g1;
                 }
                 if (g2.t1-g2.t0>700){
                     g2.t0 = g2.t1;
-                    g2.down();
+                    -g2;
                 }
                 while (g2.touched && g1.sl != g2.rl){
                     g2.recieveLine();
@@ -953,16 +978,16 @@ int main(int argc, char *argv[])
                 }
                 keypress(event.key.keysym.sym, event.type);
                 if (key == SDLK_a){
-                    g1.left();
+                    ++g1;
                 }
                 if (key == SDLK_LEFT){
-                    g2.left();
+                    ++g2;
                 }
                 if (key == SDLK_d){
-                    g1.right();
+                    g1++;
                 }
                 if (key == SDLK_RIGHT){
-                    g2.right();
+                    g2++;
                 }
                 if (key == SDLK_w){
                     g1.cRotate();
@@ -973,20 +998,20 @@ int main(int argc, char *argv[])
                 if (key == SDLK_s || lastKey == SDLK_s){
                     if (g1.t1-g1.t0>speedTable[g1.speed]/2){
                         g1.t0 = g1.t1;
-                        g1.down();
+                        -g1;
                     }
                 }
                 if (key == SDLK_DOWN || lastKey2 == SDLK_DOWN){
                     if (g2.t1-g2.t0>speedTable[g2.speed]/2){
                         g2.t0 = g2.t1;
-                        g2.down();
+                        -g2;
                     }
                 }
                 if (key == SDLK_SPACE){
-                    g1.hardDrop();
+                    --g1;
                 }
                 if (key == SDLK_KP_0 || key == SDLK_RCTRL){
-                    g2.hardDrop();
+                    --g2;
                 }
                 if (key == SDLK_LSHIFT){
                     g1.hold();
@@ -1155,6 +1180,8 @@ int main(int argc, char *argv[])
                 TIME_NOW = SDL_GetTicks();
 
             }
+            g1.~Multiplayer();
+            g2.~Multiplayer();
             status = End2P;
 
         }
