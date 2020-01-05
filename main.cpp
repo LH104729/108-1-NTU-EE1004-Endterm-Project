@@ -318,6 +318,8 @@ class GameMechanics{
     bool touched;
     unsigned int t0, t1;
 
+    GameMechanics();
+    ~GameMechanics();
     void summon();
     bool isLegal() const;
     void ghost();
@@ -326,7 +328,7 @@ class GameMechanics{
     void clearLine(int i);
     void checkLine();
     void hold();
-    virtual bool isGG();
+    virtual bool isGG(){};
 
     void operator++();      //Left
     void operator++(int);   //Right
@@ -343,7 +345,6 @@ class GameMechanics{
     int getGhostY(){return ghosty;}
     int getSpeed(){return speed;}
     int getSl(){return sl;}
-
 };
 
 class Singleplayer: public GameMechanics{
@@ -367,6 +368,24 @@ class Multiplayer: public GameMechanics{
     int getRl(){return rl;}
     int getKos(){return kos;}
 };
+
+GameMechanics::GameMechanics(){
+    for (int i = 0;i<28;i++){
+        for (int j = 0;j<10;j++){
+            board[i][j] = map_list[selected_map][i][j];
+        }
+    }
+    sl = 0;
+    held = false;
+    touched = false;
+    gg = false;
+    speed = 0;
+    return;
+}
+
+GameMechanics::~GameMechanics(){
+
+}
 
 Singleplayer::Singleplayer(){
     for (int i = 0;i<28;i++){
