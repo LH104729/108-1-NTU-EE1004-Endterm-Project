@@ -328,30 +328,30 @@ class GameMechanics{
     void clearLine(int i);
     void checkLine();
     void hold();
-    virtual bool isGG(){};
+    virtual bool isGG() {};
 
     void operator++();      //Left
     void operator++(int);   //Right
     void operator-();       //Down
     void operator--();      //Hard Drop
 
-    Piece getNext(){return nextPiece;}
-    Piece getHold(){return holdPiece;}
-    Piece getCurrent(){return currentPiece;}
-    int getBoard(int i, int j){return board[i][j];}
-    int getCurrentX(){return currentx;}
-    int getCurrentY(){return currenty;}
-    int getCurrentRotation(){return currentRotation;}
-    int getGhostY(){return ghosty;}
-    int getSpeed(){return speed;}
-    int getSl(){return sl;}
+    Piece getNext() {return nextPiece;}
+    Piece getHold() {return holdPiece;}
+    Piece getCurrent() {return currentPiece;}
+    int getBoard(int i, int j) {return board[i][j];}
+    int getCurrentX() {return currentx;}
+    int getCurrentY() {return currenty;}
+    int getCurrentRotation() {return currentRotation;}
+    int getGhostY() {return ghosty;}
+    int getSpeed() {return speed;}
+    int getSl() {return sl;}
 };
 
 class Singleplayer: public GameMechanics{
     public:
     Singleplayer();
     ~Singleplayer();
-    bool isGG();
+    bool isGG() const;
 };
 
 class Multiplayer: public GameMechanics{
@@ -535,7 +535,7 @@ void GameMechanics::touch(){
     if (!this->isGG()){ summon(); }
 }
 
-bool Singleplayer::isGG(){
+bool Singleplayer::isGG() const{
     if (gg){ return gg; }
     for (int i=0;i<10;i++){
         if (board[3][i] != 0){ return true; }
