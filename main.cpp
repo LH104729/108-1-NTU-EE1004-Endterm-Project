@@ -302,20 +302,20 @@ int map_list[4][28][10] =
 };
 
 class GameMechanics{
-    public:
+    protected:
     int board[28][10] = {};
     Piece nextPiece;
     Piece holdPiece = NONE;
     Piece currentPiece;
     int currentx,currenty,currentRotation;
     int ghosty;
-
+    bool gg;
+    bool held;
     int speed;
     int sl;
-    bool held;
-    bool touched;
-    bool gg;
 
+    public:
+    bool touched;
     unsigned int t0, t1;
 
     void summon();
@@ -332,6 +332,18 @@ class GameMechanics{
     void operator++(int);   //Right
     void operator-();       //Down
     void operator--();      //Hard Drop
+
+    Piece getNext(){return nextPiece;}
+    Piece getHold(){return holdPiece;}
+    Piece getCurrent(){return currentPiece;}
+    int getBoard(int i, int j){return board[i][j];}
+    int getCurrentX(){return currentx;}
+    int getCurrentY(){return currenty;}
+    int getCurrentRotation(){return currentRotation;}
+    int getGhostY(){return ghosty;}
+    int getSpeed(){return speed;}
+    int getSl(){return sl;}
+
 };
 
 class Singleplayer: public GameMechanics{
@@ -342,14 +354,18 @@ class Singleplayer: public GameMechanics{
 };
 
 class Multiplayer: public GameMechanics{
-    public:
+    private:
     int rl,kos;
 
+    public:
     Multiplayer();
     ~Multiplayer();
     bool isGG();
     void ko();
     void recieveLine();
+
+    int getRl(){return rl;}
+    int getKos(){return kos;}
 };
 
 Singleplayer::Singleplayer(){
@@ -818,7 +834,7 @@ int main(int argc, char *argv[])
             while (!g.isGG()){
                 //Game mechanics
                 g.t1 = SDL_GetTicks();
-                if (g.t1-g.t0>speedTable[g.speed]){
+                if (g.t1-g.t0>speedTable[g.getSpeed()]){
                     g.t0 = g.t1;
                     -g;
                 }
@@ -837,7 +853,7 @@ int main(int argc, char *argv[])
                     g.cRotate();
                 }
                 if (key == SDLK_DOWN ||key == SDLK_s){
-                    if (g.t1-g.t0>speedTable[g.speed]/2){
+                    if (g.t1-g.t0>speedTable[g.getSpeed()]/2){
                         g.t0 = g.t1;
                         -g;
                     }
@@ -857,27 +873,27 @@ int main(int argc, char *argv[])
                 srcrect = { 0, 0, 16, 32 };
                 dstrect = { 254, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (int)((g.speed+1)/10)*16, 0, 16, 32 };
+                srcrect = { (int)((g.getSpeed()+1)/10)*16, 0, 16, 32 };
                 dstrect = { 272, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { ((g.speed+1)%10)*16, 0, 16, 32 };
+                srcrect = { ((g.getSpeed()+1)%10)*16, 0, 16, 32 };
                 dstrect = { 290, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
                 //lines cleared
-                srcrect = { (int)(g.sl/100)*16, 0, 16, 32 };
+                srcrect = { (int)(g.getSl()/100)*16, 0, 16, 32 };
                 dstrect = { 254, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { ((int)(g.sl/10)%10)*16, 0, 16, 32 };
+                srcrect = { ((int)(g.getSl()/10)%10)*16, 0, 16, 32 };
                 dstrect = { 272, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (g.sl%10)*16, 0, 16, 32 };
+                srcrect = { (g.getSl()%10)*16, 0, 16, 32 };
                 dstrect = { 290, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
 
                 for (int i = 4;i<28;i++){
                     for (int j = 0;j<10;j++){
-                        if (g.board[i][j]!=0){
-                            srcrect = { (g.board[i][j]%4)*16, ((int)(g.board[i][j]/4))*16, 16, 16 };
+                        if (g.getBoard(i,j)!=0){
+                            srcrect = { (g.getBoard(i,j)%4)*16, ((int)(g.getBoard(i,j)/4))*16, 16, 16 };
                             dstrect = { 400 + j*16, 78 + (i-4)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
@@ -885,41 +901,41 @@ int main(int argc, char *argv[])
                 }
                 for (int i =0;i<4;i++){
                     for (int j =0;j<4;j++){
-                        if (pieces[(int)g.currentPiece][g.currentRotation][i][j]!=0){
+                        if (pieces[(int)g.getCurrent()][g.getCurrentRotation()][i][j]!=0){
                             srcrect = { 3*16, 3*16, 16, 16 };
-                            dstrect = { 400 + (j+g.currentx-2)*16, 78 + (i+g.ghosty-5)*16, 16, 16 };
+                            dstrect = { 400 + (j+g.getCurrentX()-2)*16, 78 + (i+g.getGhostY()-5)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
                     }
                 }
                 for (int i =0;i<4;i++){
                     for (int j =0;j<4;j++){
-                        if (pieces[(int)g.currentPiece][g.currentRotation][i][j]!=0){
-                            srcrect = { (pieces[(int)g.currentPiece][g.currentRotation][i][j]%4)*16, ((int)(pieces[(int)g.currentPiece][g.currentRotation][i][j]/4))*16, 16, 16 };
-                            dstrect = { 400 + (j+g.currentx-2)*16, 78 + (i+g.currenty-5)*16, 16, 16 };
+                        if (pieces[(int)g.getCurrent()][g.getCurrentRotation()][i][j]!=0){
+                            srcrect = { (pieces[(int)g.getCurrent()][g.getCurrentRotation()][i][j]%4)*16, ((int)(pieces[(int)g.getCurrent()][g.getCurrentRotation()][i][j]/4))*16, 16, 16 };
+                            dstrect = { 400 + (j+g.getCurrentX()-2)*16, 78 + (i+g.getCurrentY()-5)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
                     }
                 }
                 for (int i =0;i<4;i++){
                     for (int j =0; j<4;j++){
-                        if (pieces[(int)g.nextPiece][0][i][j]!=0){
-                            srcrect = { ((g.nextPiece+1)%4)*16, ((int)((g.nextPiece+1)/4))*16, 16, 16 };
+                        if (pieces[(int)g.getNext()][0][i][j]!=0){
+                            srcrect = { ((g.getNext()+1)%4)*16, ((int)((g.getNext()+1)/4))*16, 16, 16 };
                             dstrect = { 561 + (j)*16, 80 + (i)*16, 16, 16 };
-                            if (pieces[(int)g.nextPiece][0][i][j] == 2){
+                            if (pieces[(int)g.getNext()][0][i][j] == 2){
                                 dstrect = { 569 + (j)*16, 80 + (i)*16, 16, 16 };
                             }
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
                     }
                 }
-                if (g.holdPiece != NONE){
+                if (g.getHold() != NONE){
                     for (int i =0;i<4;i++){
                         for (int j =0; j<4;j++){
-                            if (pieces[(int)g.holdPiece][0][i][j]!=0){
-                                srcrect = { ((g.holdPiece+1)%4)*16, ((int)((g.holdPiece+1)/4))*16, 16, 16 };
+                            if (pieces[(int)g.getHold()][0][i][j]!=0){
+                                srcrect = { ((g.getHold()+1)%4)*16, ((int)((g.getHold()+1)/4))*16, 16, 16 };
                                 dstrect = { 561 - 242 + (j)*16, 80 + (i)*16, 16, 16 };
-                                if (pieces[(int)g.holdPiece][0][i][j] == 2){
+                                if (pieces[(int)g.getHold()][0][i][j] == 2){
                                     dstrect = { 569 - 242 + (j)*16, 80 + (i)*16, 16, 16 };
                                 }
                                 SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
@@ -964,10 +980,10 @@ int main(int argc, char *argv[])
                     g2.t0 = g2.t1;
                     -g2;
                 }
-                while (g2.touched && g1.sl != g2.rl){
+                while (g2.touched && g1.getSl() != g2.getRl()){
                     g2.recieveLine();
                 }
-                while (g1.touched && g1.rl != g2.sl){
+                while (g1.touched && g1.getRl() != g2.getSl()){
                     g1.recieveLine();
                 }
                 g1.touched = false;
@@ -996,13 +1012,13 @@ int main(int argc, char *argv[])
                     g2.cRotate();
                 }
                 if (key == SDLK_s || lastKey == SDLK_s){
-                    if (g1.t1-g1.t0>speedTable[g1.speed]/2){
+                    if (g1.t1-g1.t0>speedTable[g1.getSpeed()]/2){
                         g1.t0 = g1.t1;
                         -g1;
                     }
                 }
                 if (key == SDLK_DOWN || lastKey2 == SDLK_DOWN){
-                    if (g2.t1-g2.t0>speedTable[g2.speed]/2){
+                    if (g2.t1-g2.t0>speedTable[g2.getSpeed()]/2){
                         g2.t0 = g2.t1;
                         -g2;
                     }
@@ -1034,53 +1050,53 @@ int main(int argc, char *argv[])
                 dstrect = { 490, 32, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
                 //kos
-                srcrect = { (int)(g2.kos/100)*16, 0, 16, 32 };
+                srcrect = { (int)(g2.getKos()/100)*16, 0, 16, 32 };
                 dstrect = { 409, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { ((int)(g2.kos/10)%10)*16, 0, 16, 32 };
+                srcrect = { ((int)(g2.getKos()/10)%10)*16, 0, 16, 32 };
                 dstrect = { 427, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (g2.kos%10)*16, 0, 16, 32 };
+                srcrect = { (g2.getKos()%10)*16, 0, 16, 32 };
                 dstrect = { 445, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (int)(g1.kos/100)*16, 0, 16, 32 };
+                srcrect = { (int)(g1.getKos()/100)*16, 0, 16, 32 };
                 dstrect = { 500, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { ((int)(g1.kos/10)%10)*16, 0, 16, 32 };
+                srcrect = { ((int)(g1.getKos()/10)%10)*16, 0, 16, 32 };
                 dstrect = { 518, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (g1.kos%10)*16, 0, 16, 32 };
+                srcrect = { (g1.getKos()%10)*16, 0, 16, 32 };
                 dstrect = { 536, 215, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
                 //lines cleared
-                srcrect = { (int)(g1.sl/100)*16, 0, 16, 32 };
+                srcrect = { (int)(g1.getSl()/100)*16, 0, 16, 32 };
                 dstrect = { 409, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { ((int)(g1.sl/10)%10)*16, 0, 16, 32 };
+                srcrect = { ((int)(g1.getSl()/10)%10)*16, 0, 16, 32 };
                 dstrect = { 427, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (g1.sl%10)*16, 0, 16, 32 };
+                srcrect = { (g1.getSl()%10)*16, 0, 16, 32 };
                 dstrect = { 445, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (int)(g2.sl/100)*16, 0, 16, 32 };
+                srcrect = { (int)(g2.getSl()/100)*16, 0, 16, 32 };
                 dstrect = { 500, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { ((int)(g2.sl/10)%10)*16, 0, 16, 32 };
+                srcrect = { ((int)(g2.getSl()/10)%10)*16, 0, 16, 32 };
                 dstrect = { 518, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
-                srcrect = { (g2.sl%10)*16, 0, 16, 32 };
+                srcrect = { (g2.getSl()%10)*16, 0, 16, 32 };
                 dstrect = { 536, 299, 16, 32 };
                 SDL_RenderCopy(renderer, numbers, &srcrect, &dstrect);
 
                 for (int i = 4;i<28;i++){
                     for (int j = 0;j<10;j++){
-                        if (g1.board[i][j]!=0){
-                            srcrect = { (g1.board[i][j]%4)*16, ((int)(g1.board[i][j]/4))*16, 16, 16 };
+                        if (g1.getBoard(i,j)!=0){
+                            srcrect = { (g1.getBoard(i,j)%4)*16, ((int)(g1.getBoard(i,j)/4))*16, 16, 16 };
                             dstrect = { 200 + j*16, 78 + (i-4)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
-                        if (g2.board[i][j]!=0){
-                            srcrect = { (g2.board[i][j]%4)*16, ((int)(g2.board[i][j]/4))*16, 16, 16 };
+                        if (g2.getBoard(i,j)!=0){
+                            srcrect = { (g2.getBoard(i,j)%4)*16, ((int)(g2.getBoard(i,j)/4))*16, 16, 16 };
                             dstrect = { 600 + j*16, 78 + (i-4)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
@@ -1088,60 +1104,60 @@ int main(int argc, char *argv[])
                 }
                 for (int i =0;i<4;i++){
                     for (int j =0;j<4;j++){
-                        if (pieces[(int)g1.currentPiece][g1.currentRotation][i][j]!=0){
+                        if (pieces[(int)g1.getCurrent()][g1.getCurrentRotation()][i][j]!=0){
                             srcrect = { 3*16, 3*16, 16, 16 };
-                            dstrect = { 200 + (j+g1.currentx-2)*16, 78 + (i+g1.ghosty-5)*16, 16, 16 };
+                            dstrect = { 200 + (j+g1.getCurrentX()-2)*16, 78 + (i+g1.getGhostY()-5)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
-                        if (pieces[(int)g2.currentPiece][g2.currentRotation][i][j]!=0){
+                        if (pieces[(int)g2.getCurrent()][g2.getCurrentRotation()][i][j]!=0){
                             srcrect = { 3*16, 3*16, 16, 16 };
-                            dstrect = { 600 + (j+g2.currentx-2)*16, 78 + (i+g2.ghosty-5)*16, 16, 16 };
+                            dstrect = { 600 + (j+g2.getCurrentX()-2)*16, 78 + (i+g2.getGhostY()-5)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
                     }
                 }
                 for (int i =0;i<4;i++){
                     for (int j =0;j<4;j++){
-                        if (pieces[(int)g1.currentPiece][g1.currentRotation][i][j]!=0){
-                            srcrect = { (pieces[(int)g1.currentPiece][g1.currentRotation][i][j]%4)*16, ((int)(pieces[(int)g1.currentPiece][g1.currentRotation][i][j]/4))*16, 16, 16 };
-                            dstrect = { 200 + (j+g1.currentx-2)*16, 78 + (i+g1.currenty-5)*16, 16, 16 };
+                        if (pieces[(int)g1.getCurrent()][g1.getCurrentRotation()][i][j]!=0){
+                            srcrect = { (pieces[(int)g1.getCurrent()][g1.getCurrentRotation()][i][j]%4)*16, ((int)(pieces[(int)g1.getCurrent()][g1.getCurrentRotation()][i][j]/4))*16, 16, 16 };
+                            dstrect = { 200 + (j+g1.getCurrentX()-2)*16, 78 + (i+g1.getCurrentY()-5)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
-                        if (pieces[(int)g2.currentPiece][g2.currentRotation][i][j]!=0){
-                            srcrect = { (pieces[(int)g2.currentPiece][g2.currentRotation][i][j]%4)*16, ((int)(pieces[(int)g2.currentPiece][g2.currentRotation][i][j]/4))*16, 16, 16 };
-                            dstrect = { 600 + (j+g2.currentx-2)*16, 78 + (i+g2.currenty-5)*16, 16, 16 };
+                        if (pieces[(int)g2.getCurrent()][g2.getCurrentRotation()][i][j]!=0){
+                            srcrect = { (pieces[(int)g2.getCurrent()][g2.getCurrentRotation()][i][j]%4)*16, ((int)(pieces[(int)g2.getCurrent()][g2.getCurrentRotation()][i][j]/4))*16, 16, 16 };
+                            dstrect = { 600 + (j+g2.getCurrentX()-2)*16, 78 + (i+g2.getCurrentY()-5)*16, 16, 16 };
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
                     }
                 }
                 for (int i =0;i<4;i++){
                     for (int j =0; j<4;j++){
-                        if (pieces[(int)g1.nextPiece][0][i][j]!=0){
-                            srcrect = { ((g1.nextPiece+1)%4)*16, ((int)((g1.nextPiece+1)/4))*16, 16, 16 };
+                        if (pieces[(int)g1.getNext()][0][i][j]!=0){
+                            srcrect = { ((g1.getNext()+1)%4)*16, ((int)((g1.getNext()+1)/4))*16, 16, 16 };
                             dstrect = { 361 + (j)*16, 80 + (i)*16, 16, 16 };
-                            if (pieces[(int)g1.nextPiece][0][i][j] == 2){
+                            if (pieces[(int)g1.getNext()][0][i][j] == 2){
                                 dstrect = { 369 + (j)*16, 80 + (i)*16, 16, 16 };
                             }
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
-                        if (pieces[(int)g2.nextPiece][0][i][j]!=0){
-                            srcrect = { ((g2.nextPiece+1)%4)*16, ((int)((g2.nextPiece+1)/4))*16, 16, 16 };
+                        if (pieces[(int)g2.getNext()][0][i][j]!=0){
+                            srcrect = { ((g2.getNext()+1)%4)*16, ((int)((g2.getNext()+1)/4))*16, 16, 16 };
                             dstrect = { 761 + (j)*16, 80 + (i)*16, 16, 16 };
-                            if (pieces[(int)g2.nextPiece][0][i][j] == 2){
+                            if (pieces[(int)g2.getNext()][0][i][j] == 2){
                                 dstrect = { 769 + (j)*16, 80 + (i)*16, 16, 16 };
                             }
                             SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
                         }
                     }
                 }
-                if (g1.holdPiece != NONE){
+                if (g1.getHold() != NONE){
                     for (int i =0;i<4;i++){
                         for (int j =0; j<4;j++){
-                            if (pieces[(int)g1.holdPiece][0][i][j]!=0){
-                                srcrect = { ((g1.holdPiece+1)%4)*16, ((int)((g1.holdPiece+1)/4))*16, 16, 16 };
+                            if (pieces[(int)g1.getHold()][0][i][j]!=0){
+                                srcrect = { ((g1.getHold()+1)%4)*16, ((int)((g1.getHold()+1)/4))*16, 16, 16 };
                                 dstrect = { 361 - 242 + (j)*16, 80 + (i)*16, 16, 16 };
-                                if (pieces[(int)g1.holdPiece][0][i][j] == 2){
+                                if (pieces[(int)g1.getHold()][0][i][j] == 2){
                                     dstrect = { 369 - 242 + (j)*16, 80 + (i)*16, 16, 16 };
                                 }
                                 SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
@@ -1149,13 +1165,13 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                if (g2.holdPiece != NONE){
+                if (g2.getHold() != NONE){
                     for (int i =0;i<4;i++){
                         for (int j =0; j<4;j++){
-                            if (pieces[(int)g2.holdPiece][0][i][j]!=0){
-                                srcrect = { ((g2.holdPiece+1)%4)*16, ((int)((g2.holdPiece+1)/4))*16, 16, 16 };
+                            if (pieces[(int)g2.getHold()][0][i][j]!=0){
+                                srcrect = { ((g2.getHold()+1)%4)*16, ((int)((g2.getHold()+1)/4))*16, 16, 16 };
                                 dstrect = { 761 - 242 + (j)*16, 80 + (i)*16, 16, 16 };
-                                if (pieces[(int)g2.holdPiece][0][i][j] == 2){
+                                if (pieces[(int)g2.getHold()][0][i][j] == 2){
                                     dstrect = { 769 - 242 + (j)*16, 80 + (i)*16, 16, 16 };
                                 }
                                 SDL_RenderCopy(renderer, tetrimino, &srcrect, &dstrect);
@@ -1166,14 +1182,14 @@ int main(int argc, char *argv[])
 
                 SDL_RenderPresent(renderer);
                 winner = "Player 1 Wins";
-                if (g1.kos > g2.kos){
+                if (g1.getKos() > g2.getKos()){
                     winner = "Player 2 Wins";
                 }
-                else if (g1.kos == g2.kos){
-                    if (g1.sl < g2.sl){
+                else if (g1.getKos() == g2.getKos()){
+                    if (g1.getSl() < g2.getSl()){
                         winner = "Player 2 Wins";
                     }
-                    else if (g1.sl == g2.sl){
+                    else if (g1.getSl() == g2.getSl()){
                         winner = "     Tie     ";
                     }
                 }
