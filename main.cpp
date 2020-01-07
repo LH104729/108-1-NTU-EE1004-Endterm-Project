@@ -351,7 +351,7 @@ class Singleplayer: public GameMechanics{
     public:
     Singleplayer();
     ~Singleplayer();
-    bool isGG() const;
+    bool isGG();
 };
 
 class Multiplayer: public GameMechanics{
@@ -532,10 +532,10 @@ void GameMechanics::touch(){
     checkLine();
     touched = true;
     held = false;
-    if (!this->isGG()){ summon(); }
+    if (!isGG()){ summon(); }
 }
 
-bool Singleplayer::isGG() const{
+bool Singleplayer::isGG(){
     if (gg){ return gg; }
     for (int i=0;i<10;i++){
         if (board[3][i] != 0){ return true; }
