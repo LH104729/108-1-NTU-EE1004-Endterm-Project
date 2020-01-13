@@ -7,7 +7,8 @@ Department of Mathematics 馮朗軒 B08201030 宋冠璋 B08201041
 Unzip the file and run Tetris.exe
 
 ## Controls:
-```1 Player:
+```
+1 Player:
 	Left: A or Left
 	Right: D or Right
 	Clockwise Spin: W or Up
@@ -32,16 +33,20 @@ Unzip the file and run Tetris.exe
 		Hold: RShift
 ```			
 ## How to play:
-```Pieces will start dropping from the top of the board and land when they hit the bottom
+```
+Pieces will start dropping from the top of the board and land when they hit the bottom
 The objective is to create as much horizontal lines as possible.
 The player can control the piece by moving it left, right, down, or rotating it.
 When a line is complete, it will disappear.
-If the board reached the top, the game ends. ```
+If the board reached the top, the game ends. 
+```
 
-```For Multiplayer:
+```
+For Multiplayer:
 The game will last 2 minutes, for each line one player clears, one line will be added to the bottom of the other player's board.
 Once the board reached the top, some lines at the bottom of the board will be cleared.
 The one will the most KO's wins.
 If tied, the one with the most lines cleared wins.
 If tied again, the one with the least board height wins.
-If all three score are the same, then the game is a tie.```
+If all three score are the same, then the game is a tie.
+```
