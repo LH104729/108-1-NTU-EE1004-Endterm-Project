@@ -13,7 +13,6 @@ Controls:
 		Soft Drop: S or Down
 		Hard Drop: Space Bar
 		Hold: LShift or RShift
-		
 	2 Player:
 		P1:
 			Left: A
