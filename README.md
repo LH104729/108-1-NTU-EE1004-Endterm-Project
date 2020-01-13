@@ -1,12 +1,12 @@
-#Tetris
+# Tetris
 108-1 EE1004 Endterm Project
 
 Department of Mathematics 馮朗軒 B08201030 宋冠璋 B08201041
 
-##Installation:
+## Installation:
 Unzip the file and run Tetris.exe
 
-##Controls:
+## Controls:
 ```1 Player:
 	Left: A or Left
 	Right: D or Right
@@ -31,7 +31,7 @@ Unzip the file and run Tetris.exe
 		Hard Drop: Num Pad 0 or RCtrl
 		Hold: RShift
 ```			
-##How to play:
+## How to play:
 ```Pieces will start dropping from the top of the board and land when they hit the bottom
 The objective is to create as much horizontal lines as possible.
 The player can control the piece by moving it left, right, down, or rotating it.
