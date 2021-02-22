@@ -1,7 +1,8 @@
 # Tetris
-108-1 EE1004 Endterm Project
-
-Department of Mathematics 馮朗軒 B08201030 宋冠璋 B08201041
+108-1 EE1004 Final Project
+National Taiwan University
+Department of Mathematics
+B08201030 B08201041
 
 ## Installation:
 Unzip the file and run Tetris.exe
